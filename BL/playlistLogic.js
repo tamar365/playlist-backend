@@ -1,4 +1,3 @@
-const req = require("express/lib/request");
 const playlist = require("../DL/controllers/playlistController");
 const song = require("../DL/controllers/songController")
 
@@ -10,37 +9,38 @@ async function createPlaylist (req) {
         existsPlaylist.save();
         return existsPlaylist;
     } else {
-        const newPlaylist = await playlist.create(req);
+        const newPlaylist = await playlist.create(req.user._id);
         newPlaylist.songs.push({id: req.body.data._id})
         newPlaylist.save();
         return newPlaylist;
       }
 }
 
-async function getPlaylist (req) {
-    const userPlaylist = await playlist.readOne({ createBy: req.user._id });
+async function getPlaylist (id) {
+    const userPlaylist = await playlist.read(id);
     let songsList = [];
   
     if (userPlaylist?.length > 0) {
       const arraySongs = userPlaylist[0].songs;
-      const songIds = arraySongs.map((id) => id.id);
-      songsList = await song.readOne({ _id: songIds });
+      const songsId = arraySongs.map((id) => id.id);
+      songsList = await song.read(songsId);
+      console.log(songsList)
     }
-  
-    return res.send(songsList);
+    
+    return songsList;
 }
 
 async function removeSongFromPlaylist(req) {
-    const existsPlaylist = await playlist.readOne({ createBy: req.user._id });
+    const existsPlaylist = await playlist.readOne(req.user._id);
     if (!existsPlaylist) {
       res.status(400).json({ message: "The playlist does not exist" });
     } else {
-      const songDeleted = await song.readOne({ id: req.params.id });
-      const song_id = song._id.valueOf();
-      songDeleted.deleteOne({ id: song._id });
-      playlist.songs.remove({ id: song_id });
-      playlist.save();
-      return res.send({ songDeleted });
+      const existsSong = await song.readOne(req.params.id);
+      const song_id = existsSong._id.valueOf();
+      const deletedSong = await song.del(existsSong._id);
+      existsPlaylist.songs.remove({id: song_id})
+      existsPlaylist.save();
+      return deletedSong;
     }
 }
 

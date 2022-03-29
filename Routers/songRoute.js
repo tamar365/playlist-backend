@@ -7,7 +7,6 @@ const authJWT = require("../Middleware/authentication")
 router.post('/newsong', authJWT, async (req,res) => {
   try {
     const newsong = await songLogic.createSong(req)
-    console.log (newsong)
     res.send(newsong)
   }catch (err) {
     res.send({code:400, message:err.message || err})

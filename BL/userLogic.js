@@ -1,54 +1,50 @@
 const user = require("../DL/controllers/userController");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const res = require("express/lib/response");
 
-async function createUser (req) {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const userAlreadyExicst = await user.readOne(
-      req.body.username
-    );
+
+async function createUser (input) {
+    const userAlreadyExicst = await user.readOne(input.username);
     if (userAlreadyExicst) {
-        return res.status(401).send("user name already exists");
+        return ({message: "user name already exists"});
     }
-    const newUser = { 
-        username: req.body.username,
-        password: hashedPassword
+    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const newUser = {
+      username:input.username, password:hashedPassword
     }
-    console.log(newUser)
-    return await user.create(req);
+    const userFromDB = await user.create(newUser)
+    return userFromDB.username;
 };
-// console.log("New user saved successfully");
 
-async function readUser (req) {
-    if (req.body.username && req.body.password) {
+async function loginUser (userInput) {
+  
+    if (userInput.username && userInput.password) {
         let isValidLogin = false;
-        const existsUser = await user.readOne({ username: req.body.username });
-        console.log(existsUser);
-  
+        let existsUser = await user.readOne(userInput.username);
+        
         if (existsUser) {
-          isValidLogin = await bcrypt.compare(req.body.password, user.password);
+          isValidLogin = await bcrypt.compare(userInput.password, existsUser.password);
         }
-  
+         
         if (isValidLogin) {
           const accessToken = jwt.sign(
             JSON.stringify(existsUser),
             process.env.TOKEN_SECRET
           );
           existsUser.password = undefined;
-          res.json(accessToken);
+          return accessToken;
         } else {
-          res.status(401).json({ message: "Invalid credentials" });
+          throw ({message: "Invalid credentials"})
         }
       } else {
-        res.status(400).json({ message: "Please supply username and password" });
+        throw ({message: "Status 400 => Please supply username and password"});
       }
 };
 
+
 async function getUsers(){
   const users = await user.read();
-  console.log(users)
   return users;
 }
 
-module.exports = {createUser, readUser, getUsers};
+module.exports = {createUser, loginUser, getUsers};

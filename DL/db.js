@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-// require("dotnev").config();
 
 const connectDB = async () => {
   try{

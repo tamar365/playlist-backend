@@ -1,9 +1,7 @@
 const song = require("../DL/controllers/songController");
 
 async function createSong (req) {
-    console.log(req.body)
-    const existsSong = await song.readOne({ _id: req.body.id });
-    console.log(existsSong)
+    const existsSong = await song.readOne(req.body.id);
     if(existsSong) {
         return console.log("The song exists");
     }
