@@ -4,8 +4,8 @@ const jwt = require("jsonwebtoken");
 
 
 async function createUser (input) {
-    const userAlreadyExicst = await user.readOne(input.username);
-    if (userAlreadyExicst) {
+    const userAlreadyExist = await user.readOne(input.username);
+    if (userAlreadyExist) {
         return ({message: "user name already exists"});
     }
     const hashedPassword = await bcrypt.hash(input.password, 10);
